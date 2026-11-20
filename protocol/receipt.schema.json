@@ -1,0 +1,20 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"warforge://schema/receipt/1",
+  "title":"Warforge Receipt",
+  "type":"object",
+  "required":["protocol","receipt_id","match_id","type","actor","seat","timestamp","payload_hash"],
+  "properties":{
+    "protocol":{"const":"warforge/1"},
+    "receipt_id":{"type":"string"},
+    "match_id":{"type":"string"},
+    "type":{"enum":["ACTION_RECEIPT","STATE_RECEIPT","ARTIFACT_RECEIPT","BUILD_RECEIPT","TEST_RECEIPT","MOVE_RECEIPT","SCORE_RECEIPT","PERMISSION_RECEIPT","DENIAL_RECEIPT","DISCONNECT_RECEIPT","REJOIN_RECEIPT","JUDGE_RECEIPT","RESULT_RECEIPT"]},
+    "actor":{"type":"string"},
+    "seat":{"type":"string"},
+    "timestamp":{"type":"string","format":"date-time"},
+    "payload_hash":{"type":"string"},
+    "previous_receipt_hash":{"type":["string","null"]},
+    "payload":{"type":"object"}
+  },
+  "additionalProperties":false
+}
