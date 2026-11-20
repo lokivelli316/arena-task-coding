@@ -1,0 +1,11 @@
+import fs from "node:fs";
+import { WarforgeMatch } from "../src/match.js";
+const m=JSON.parse(fs.readFileSync(new URL("../examples/coding-deathmatch.json",import.meta.url)));
+const game=new WarforgeMatch(m);
+game.setState("score",{alpha:0,bravo:0},{class:"PUBLIC"});
+game.setState("alphaPlan","private-alpha",{class:"SEAT_PRIVATE",seat:"alpha"});
+game.setState("nativeSecret","never-exposed",{class:"APP_PRIVATE"});
+const allowed=game.request({bridge:"warforge://bridge/github",seat:"alpha",actor:"warforge://operator/coder-alpha",action:"commit",payload:{sha:"example"}});
+const denied=game.request({bridge:"warforge://bridge/github",seat:"bravo",actor:"warforge://operator/coder-bravo",action:"score"});
+if(!allowed.ok || denied.ok || game.view("bravo").alphaPlan || !game.ledger.verify()) process.exit(1);
+console.log(JSON.stringify({status:"PASS",alphaView:game.view("alpha"),bravoView:game.view("bravo"),receipts:game.ledger.all().length,chain:game.ledger.verify()},null,2));
