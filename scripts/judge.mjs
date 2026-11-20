@@ -1,0 +1,15 @@
+import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
+import fs from "node:fs";
+const [,,cwd=".",...cmd]=process.argv;
+if(!cmd.length) throw new Error("usage: node scripts/judge.mjs <cwd> <command> [args...]");
+const start=Date.now();
+const r=spawnSync(cmd[0],cmd.slice(1),{cwd,encoding:"utf8",shell:false,env:{...process.env,CI:"1"}});
+const body={judge:"deterministic-command",cwd,command:cmd,exit_code:r.status,duration_ms:Date.now()-start,stdout:r.stdout??"",stderr:r.stderr??""};
+const canonical=JSON.stringify(body);
+body.receipt_hash=createHash("sha256").update(canonical).digest("hex");
+fs.mkdirSync("runtime/receipts",{recursive:true});
+const path=`runtime/receipts/judge-${Date.now()}.json`;
+fs.writeFileSync(path,JSON.stringify(body,null,2)+"\n");
+console.log(JSON.stringify({receipt:path,hash:body.receipt_hash,exit_code:body.exit_code},null,2));
+process.exit(r.status ?? 1);
