@@ -1,0 +1,13 @@
+{
+  "name": "astramythos-deathmatch",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Warforge governed match protocol and Coding Deathmatch reference harness",
+  "scripts": {
+    "test": "node --test",
+    "validate": "node scripts/validate-manifest.mjs examples/coding-deathmatch.json",
+    "smoke": "node scripts/smoke.mjs"
+  },
+  "engines": {"node": ">=20"}
+}
