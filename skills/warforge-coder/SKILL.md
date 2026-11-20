@@ -23,3 +23,20 @@ Address: `warforge://operator/coder`
 
 ## Submission
 Return changed paths, commit/patch identity, tests and exact results, artifact hashes, unresolved blockers, and no completion claim beyond verified evidence.
+
+## Local executable path
+
+Run `npm run coder -- --help` in the Warforge repository. The trusted host
+selects the manifest, source repository and new evidence directory. Use
+`npm run smoke` to exercise the local-agent and human channels, two submissions,
+the deterministic judge and replay.
+
+Use the bound seat channel for `context`, `read`, `write`, `run`, `progress`,
+`artifact` and `submit` when a seat grant permits them. `run` takes a command
+ID from the seat's context. `disconnect` and `rejoin` use the manifest's
+limits. `fail` and `terminate` resolve the seat. Once submitted, the seat's
+commit and patch are fixed for judging.
+
+The trusted host can inspect archived evidence with
+`npm run coder -- replay <archive.json> <trusted-receipt-tip>`. Availability of
+a provider executable alone does not register a provider adapter.

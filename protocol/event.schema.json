@@ -18,16 +18,20 @@
       "const": "warforge/1"
     },
     "event_id": {
-      "type": "string"
+      "type": "string",
+      "minLength": 1
     },
     "match_id": {
-      "type": "string"
+      "type": "string",
+      "minLength": 1
     },
     "type": {
-      "type": "string"
+      "type": "string",
+      "minLength": 1
     },
     "source": {
-      "type": "string"
+      "type": "string",
+      "minLength": 1
     },
     "seat": {
       "type": [
@@ -52,5 +56,27 @@
       "type": "object"
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "visibility": {
+            "const": "SEAT_PRIVATE"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "seat"
+        ],
+        "properties": {
+          "seat": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ]
 }

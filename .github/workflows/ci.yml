@@ -6,12 +6,18 @@ permissions:
   contents: read
 jobs:
   protocol:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm test
-      - run: npm run validate
-      - run: npm run smoke
+          cache: npm
+      - name: Prepare Bubblewrap on the disposable CI runner
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bubblewrap
+          if ! /usr/bin/bwrap --unshare-user --disable-userns --ro-bind / / /usr/bin/true; then
+            printf 'abi <abi/4.0>,\nprofile warforge-bwrap /usr/bin/bwrap flags=(unconfined) { userns, }\n' | sudo apparmor_parser -r
+          fi
+      - run: ./install.sh

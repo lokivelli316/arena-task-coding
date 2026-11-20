@@ -1,19 +1,27 @@
+import { bridgeSchema, requireSchema } from "./schemas.js";
+
 export class BridgeRegistry {
   #bridges = new Map();
+
   register(bridge) {
-    for (const key of ["id","version","capabilities","actions","events","state_classes"]) {
-      if (bridge[key] == null) throw new Error(`bridge missing ${key}`);
-    }
+    requireSchema(bridgeSchema, bridge);
     if (this.#bridges.has(bridge.id)) throw new Error(`duplicate bridge ${bridge.id}`);
     this.#bridges.set(bridge.id, structuredClone(bridge));
   }
-  get(id){ return this.#bridges.get(id); }
-  list(){ return [...this.#bridges.values()]; }
+
+  get(id) {
+    return structuredClone(this.#bridges.get(id));
+  }
+
+  list() {
+    return structuredClone([...this.#bridges.values()]);
+  }
+
   authorize(id, seat, action) {
-    const b=this.get(id);
-    if(!b) return {ok:false,reason:"unsupported-bridge"};
-    if(!b.actions.includes(action)) return {ok:false,reason:"unsupported-action"};
-    const allowed=b.permissions?.[seat]?.actions ?? [];
-    return allowed.includes(action) ? {ok:true} : {ok:false,reason:"denied"};
+    const bridge = this.#bridges.get(id);
+    if (!bridge) return {ok: false, reason: "unsupported-bridge"};
+    if (!bridge.actions.includes(action)) return {ok: false, reason: "unsupported-action"};
+    const grant = Object.hasOwn(bridge.permissions, seat) && bridge.permissions[seat];
+    return grant?.actions?.includes(action) ? {ok: true} : {ok: false, reason: "denied"};
   }
 }

@@ -1,24 +1,538 @@
 {
-  "protocol":"warforge/1",
-  "match_id":"deathmatch-0042",
-  "mode":"competitive",
-  "surface":{"type":"repository","id":"lokivelli316/arena-task-coding"},
-  "operators":[
-    {"id":"warforge://operator/lokivelli","type":"human","roles":["operator","coder","judge"],"capabilities":["intervene","review"]},
-    {"id":"warforge://operator/coder-alpha","type":"model","roles":["coder"],"capabilities":["read_file","write_file","run_tests","git"]},
-    {"id":"warforge://operator/coder-bravo","type":"model","roles":["coder"],"capabilities":["read_file","write_file","run_tests","git"]},
-    {"id":"warforge://operator/test-harness","type":"tool","roles":["judge"],"capabilities":["run_tests","score"]}
+  "protocol": "warforge/1",
+  "match_id": "deathmatch-0042",
+  "mode": "competitive",
+  "surface": {
+    "type": "repository",
+    "id": "warforge-acceptance-fixture"
+  },
+  "operators": [
+    {
+      "id": "warforge://operator/lokivelli",
+      "type": "human",
+      "roles": [
+        "operator",
+        "coder",
+        "judge"
+      ],
+      "capabilities": [
+        "intervene",
+        "review"
+      ]
+    },
+    {
+      "id": "warforge://operator/coder-alpha",
+      "type": "agent",
+      "roles": [
+        "coder"
+      ],
+      "capabilities": [
+        "read_file",
+        "write_file",
+        "run_tests",
+        "git"
+      ]
+    },
+    {
+      "id": "warforge://operator/coder-bravo",
+      "type": "human",
+      "roles": [
+        "coder"
+      ],
+      "capabilities": [
+        "read_file",
+        "write_file",
+        "run_tests",
+        "git"
+      ]
+    },
+    {
+      "id": "warforge://operator/test-harness",
+      "type": "tool",
+      "roles": [
+        "judge"
+      ],
+      "capabilities": [
+        "run_tests",
+        "score"
+      ]
+    }
   ],
-  "seats":[
-    {"id":"alpha","operator":"warforge://operator/coder-alpha","role":"coder","permissions":{"repo_scope":["worktree:alpha"],"actions":["read","write","test","commit"]},"budget":{"turns":50}},
-    {"id":"bravo","operator":"warforge://operator/coder-bravo","role":"coder","permissions":{"repo_scope":["worktree:bravo"],"actions":["read","write","test","commit"]},"budget":{"turns":50}},
-    {"id":"operator","operator":"warforge://operator/lokivelli","role":"operator","permissions":{"actions":["observe","intervene","judge"]}},
-    {"id":"judge","operator":"warforge://operator/test-harness","role":"judge","permissions":{"actions":["test","score"]}}
+  "seats": [
+    {
+      "id": "alpha",
+      "operator": "warforge://operator/coder-alpha",
+      "role": "coder",
+      "permissions": {
+        "repo_scope": [
+          "worktree:alpha"
+        ],
+        "actions": [
+          "context",
+          "progress",
+          "disconnect",
+          "rejoin",
+          "terminate",
+          "fail",
+          "read",
+          "write",
+          "submit",
+          "artifact",
+          "run"
+        ],
+        "forbidden_actions": [
+          "intervene"
+        ]
+      },
+      "budget": {
+        "turns": 35,
+        "wall_ms": 60000
+      },
+      "adapter": "local"
+    },
+    {
+      "id": "bravo",
+      "operator": "warforge://operator/coder-bravo",
+      "role": "coder",
+      "permissions": {
+        "repo_scope": [
+          "worktree:bravo"
+        ],
+        "actions": [
+          "context",
+          "progress",
+          "disconnect",
+          "rejoin",
+          "terminate",
+          "fail",
+          "read",
+          "write",
+          "submit",
+          "artifact",
+          "run"
+        ],
+        "forbidden_actions": [
+          "intervene"
+        ]
+      },
+      "budget": {
+        "turns": 35,
+        "wall_ms": 60000
+      },
+      "adapter": "human"
+    },
+    {
+      "id": "operator",
+      "operator": "warforge://operator/lokivelli",
+      "role": "operator",
+      "permissions": {
+        "actions": [
+          "intervene",
+          "observe"
+        ]
+      }
+    },
+    {
+      "id": "judge",
+      "operator": "warforge://operator/test-harness",
+      "role": "judge",
+      "permissions": {
+        "actions": [
+          "evaluate",
+          "finalize"
+        ]
+      }
+    }
   ],
-  "bridges":[
-    {"id":"warforge://bridge/github","version":"0.1.0","capabilities":["repository","branch","commit"],"actions":["read","write","commit"],"events":["commit"],"state_classes":["PUBLIC","SEAT_PRIVATE","JUDGE_ONLY","REPLAY_SAFE"],"permissions":{"alpha":{"actions":["read","write","commit"]},"bravo":{"actions":["read","write","commit"]},"operator":{"actions":["read"]}}},
-    {"id":"warforge://bridge/test-harness","version":"0.1.0","capabilities":["test","score"],"actions":["test","score"],"events":["build","test","score"],"state_classes":["PUBLIC","JUDGE_ONLY","REPLAY_SAFE"],"permissions":{"judge":{"actions":["test","score"]},"operator":{"actions":["test"]}}}
+  "bridges": [
+    {
+      "id": "warforge://bridge/coder",
+      "version": "0.2.0",
+      "native_app": "Coding seat coordinator",
+      "capabilities": [
+        "context",
+        "progress",
+        "disconnect",
+        "rejoin",
+        "terminate",
+        "fail",
+        "intervene",
+        "observe"
+      ],
+      "actions": [
+        "context",
+        "progress",
+        "disconnect",
+        "rejoin",
+        "terminate",
+        "fail",
+        "intervene",
+        "observe"
+      ],
+      "events": [
+        "seat-initialized",
+        "seat-status"
+      ],
+      "state_classes": [
+        "REPLAY_SAFE",
+        "SEAT_PRIVATE",
+        "PUBLIC"
+      ],
+      "permissions": {
+        "alpha": {
+          "actions": [
+            "context",
+            "progress",
+            "disconnect",
+            "rejoin",
+            "terminate",
+            "fail"
+          ]
+        },
+        "bravo": {
+          "actions": [
+            "context",
+            "progress",
+            "disconnect",
+            "rejoin",
+            "terminate",
+            "fail"
+          ]
+        },
+        "operator": {
+          "actions": [
+            "intervene",
+            "observe"
+          ]
+        }
+      },
+      "transports": [
+        "host-local"
+      ],
+      "inputs": {
+        "context": {},
+        "progress": {},
+        "disconnect": {},
+        "rejoin": {},
+        "terminate": {},
+        "fail": {},
+        "intervene": {
+          "seat": "coder seat ID"
+        },
+        "observe": {}
+      },
+      "outputs": {
+        "context": "governed result",
+        "progress": "governed result",
+        "disconnect": "governed result",
+        "rejoin": "governed result",
+        "terminate": "governed result",
+        "fail": "governed result",
+        "intervene": "governed result",
+        "observe": "public match projection"
+      },
+      "limits": {
+        "policy": "coding"
+      },
+      "errors": [
+        "denied",
+        "unsupported-action",
+        "invalid-input",
+        "action-specific-denial"
+      ],
+      "receipt_types": [
+        "PERMISSION_RECEIPT",
+        "ACTION_RECEIPT",
+        "DENIAL_RECEIPT",
+        "DISCONNECT_RECEIPT",
+        "REJOIN_RECEIPT",
+        "STATE_RECEIPT"
+      ]
+    },
+    {
+      "id": "warforge://bridge/github",
+      "version": "0.2.0",
+      "native_app": "Git (local repository)",
+      "capabilities": [
+        "read",
+        "write",
+        "submit",
+        "artifact"
+      ],
+      "actions": [
+        "read",
+        "write",
+        "submit",
+        "artifact"
+      ],
+      "events": [
+        "submission",
+        "artifact"
+      ],
+      "state_classes": [
+        "REPLAY_SAFE",
+        "SEAT_PRIVATE"
+      ],
+      "permissions": {
+        "alpha": {
+          "actions": [
+            "read",
+            "write",
+            "submit",
+            "artifact"
+          ]
+        },
+        "bravo": {
+          "actions": [
+            "read",
+            "write",
+            "submit",
+            "artifact"
+          ]
+        }
+      },
+      "transports": [
+        "host-local"
+      ],
+      "inputs": {
+        "read": {
+          "path": "scoped path"
+        },
+        "write": {
+          "path": "scoped path",
+          "content": "UTF-8 text"
+        },
+        "submit": {},
+        "artifact": {
+          "id": "configured artifact ID"
+        }
+      },
+      "outputs": {
+        "read": "governed result",
+        "write": "governed result",
+        "submit": "governed result",
+        "artifact": "governed result"
+      },
+      "limits": {
+        "policy": "coding"
+      },
+      "errors": [
+        "denied",
+        "unsupported-action",
+        "invalid-input",
+        "action-specific-denial"
+      ],
+      "receipt_types": [
+        "PERMISSION_RECEIPT",
+        "ACTION_RECEIPT",
+        "DENIAL_RECEIPT",
+        "ARTIFACT_RECEIPT"
+      ]
+    },
+    {
+      "id": "warforge://bridge/terminal",
+      "version": "0.2.0",
+      "native_app": "Bubblewrap / Node.js",
+      "capabilities": [
+        "run"
+      ],
+      "actions": [
+        "run"
+      ],
+      "events": [
+        "build",
+        "test"
+      ],
+      "state_classes": [
+        "REPLAY_SAFE",
+        "SEAT_PRIVATE"
+      ],
+      "permissions": {
+        "alpha": {
+          "actions": [
+            "run"
+          ]
+        },
+        "bravo": {
+          "actions": [
+            "run"
+          ]
+        }
+      },
+      "transports": [
+        "host-local"
+      ],
+      "inputs": {
+        "run": {
+          "id": "terminal-enabled command ID"
+        }
+      },
+      "outputs": {
+        "run": "governed result"
+      },
+      "limits": {
+        "policy": "coding"
+      },
+      "errors": [
+        "denied",
+        "unsupported-action",
+        "invalid-input",
+        "action-specific-denial"
+      ],
+      "receipt_types": [
+        "PERMISSION_RECEIPT",
+        "ACTION_RECEIPT",
+        "DENIAL_RECEIPT",
+        "BUILD_RECEIPT",
+        "TEST_RECEIPT"
+      ]
+    },
+    {
+      "id": "warforge://bridge/test-harness",
+      "version": "0.2.0",
+      "native_app": "Deterministic test runner",
+      "capabilities": [
+        "evaluate",
+        "finalize"
+      ],
+      "actions": [
+        "evaluate",
+        "finalize"
+      ],
+      "events": [
+        "build",
+        "test",
+        "artifact",
+        "judge",
+        "score",
+        "result"
+      ],
+      "state_classes": [
+        "REPLAY_SAFE"
+      ],
+      "permissions": {
+        "judge": {
+          "actions": [
+            "evaluate",
+            "finalize"
+          ]
+        }
+      },
+      "transports": [
+        "host-local"
+      ],
+      "inputs": {
+        "evaluate": {
+          "seat": "submitted coder seat ID"
+        },
+        "finalize": {}
+      },
+      "outputs": {
+        "evaluate": "governed result",
+        "finalize": "governed result"
+      },
+      "limits": {
+        "policy": "coding"
+      },
+      "errors": [
+        "denied",
+        "unsupported-action",
+        "invalid-input",
+        "action-specific-denial"
+      ],
+      "receipt_types": [
+        "PERMISSION_RECEIPT",
+        "ACTION_RECEIPT",
+        "DENIAL_RECEIPT",
+        "BUILD_RECEIPT",
+        "TEST_RECEIPT",
+        "ARTIFACT_RECEIPT",
+        "SCORE_RECEIPT",
+        "JUDGE_RECEIPT",
+        "RESULT_RECEIPT"
+      ]
+    }
   ],
-  "judge":{"id":"warforge://operator/test-harness","type":"deterministic"},
-  "receipt_policy":{"required":true,"hash_chain":true,"types":["ACTION_RECEIPT","DENIAL_RECEIPT","BUILD_RECEIPT","TEST_RECEIPT","SCORE_RECEIPT","RESULT_RECEIPT"]}
+  "judge": {
+    "id": "warforge://operator/test-harness",
+    "type": "deterministic"
+  },
+  "receipt_policy": {
+    "required": true,
+    "hash_chain": true,
+    "types": [
+      "PERMISSION_RECEIPT",
+      "ACTION_RECEIPT",
+      "DENIAL_RECEIPT",
+      "DISCONNECT_RECEIPT",
+      "REJOIN_RECEIPT",
+      "STATE_RECEIPT",
+      "ARTIFACT_RECEIPT",
+      "BUILD_RECEIPT",
+      "TEST_RECEIPT",
+      "SCORE_RECEIPT",
+      "JUDGE_RECEIPT",
+      "RESULT_RECEIPT"
+    ]
+  },
+  "coding": {
+    "task": {
+      "title": "Implement the acceptance fixture",
+      "specification": "Change answer.txt to contain the agreed message.",
+      "acceptance": "The exact UTF-8 bytes of answer.txt must be warforge followed by a newline."
+    },
+    "base_ref": "HEAD",
+    "files": [
+      "answer.txt"
+    ],
+    "runtime": "linux-bubblewrap",
+    "tools": [
+      "node"
+    ],
+    "secrets": "none",
+    "commands": [
+      {
+        "id": "readiness",
+        "kind": "build",
+        "tool": "node",
+        "args": [
+          "-e",
+          "require('node:fs').accessSync('answer.txt')"
+        ],
+        "timeout_ms": 3000,
+        "points": 1,
+        "terminal": true
+      },
+      {
+        "id": "acceptance",
+        "kind": "acceptance",
+        "tool": "node",
+        "args": [
+          "-e",
+          "if (require('node:fs').readFileSync('answer.txt','utf8') !== 'warforge\\n') process.exit(1)"
+        ],
+        "timeout_ms": 3000,
+        "points": 9
+      }
+    ],
+    "artifacts": [
+      {
+        "id": "answer",
+        "path": "answer.txt",
+        "points": 0
+      }
+    ],
+    "scoring": {
+      "tie_breaker": "shared",
+      "eligibility": "all-checks-pass"
+    },
+    "intervention": "terminate-only",
+    "substitution": "forbidden",
+    "disconnect": {
+      "max_rejoins": 1,
+      "rejoin_within_ms": 30000
+    },
+    "termination": "all-seats-resolved",
+    "match_timeout_ms": 120000
+  }
 }

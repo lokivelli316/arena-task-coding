@@ -1,15 +1,34 @@
-import { spawnSync } from "node:child_process";
-import { createHash } from "node:crypto";
-import fs from "node:fs";
-const [,,cwd=".",...cmd]=process.argv;
-if(!cmd.length) throw new Error("usage: node scripts/judge.mjs <cwd> <command> [args...]");
-const start=Date.now();
-const r=spawnSync(cmd[0],cmd.slice(1),{cwd,encoding:"utf8",shell:false,env:{...process.env,CI:"1"}});
-const body={judge:"deterministic-command",cwd,command:cmd,exit_code:r.status,duration_ms:Date.now()-start,stdout:r.stdout??"",stderr:r.stderr??""};
-const canonical=JSON.stringify(body);
-body.receipt_hash=createHash("sha256").update(canonical).digest("hex");
-fs.mkdirSync("runtime/receipts",{recursive:true});
-const path=`runtime/receipts/judge-${Date.now()}.json`;
-fs.writeFileSync(path,JSON.stringify(body,null,2)+"\n");
-console.log(JSON.stringify({receipt:path,hash:body.receipt_hash,exit_code:body.exit_code},null,2));
-process.exit(r.status ?? 1);
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { ReceiptLedger, safeRepoPath } from "../src/core.js";
+import { checkSandbox, runSandboxed } from "../src/sandbox.js";
+import { git, readWorktreeFile, repositoryBase } from "../src/worktrees.js";
+
+const [, , cwd, command, ...args] = process.argv;
+if (!cwd || command !== "node" || !args.length) {
+  console.error("usage: node scripts/judge.mjs <git-worktree> node <args...>");
+  process.exit(2);
+}
+checkSandbox();
+const {root} = repositoryBase(cwd);
+const files = git(root, ["ls-files", "-z"], {bytes: true}).toString("utf8").split("\0").filter(safeRepoPath);
+if (files.length > 128) throw new Error("standalone judge supports at most 128 tracked paths");
+const parent = mkdtempSync(join(tmpdir(), "warforge-judge-"));
+try {
+  const {stdout, stderr, ...outcome} = runSandboxed({
+    parent, readFile: file => readWorktreeFile(root, file), files, args, timeout: 10_000
+  });
+  const ledger = new ReceiptLedger();
+  const receipt = ledger.append({
+    match_id: "standalone-judge", type: "TEST_RECEIPT", actor: "warforge://operator/test-harness",
+    seat: null, payload: {kind: "test", ...outcome}
+  });
+  mkdirSync("runtime/receipts", {recursive: true, mode: 0o700});
+  const path = `runtime/receipts/judge-${receipt.receipt_id}.json`;
+  writeFileSync(path, JSON.stringify(receipt, null, 2) + "\n", {flag: "wx", mode: 0o600});
+  console.log(JSON.stringify({receipt: path, hash: receipt.receipt_hash, exit_code: outcome.exit_code}));
+  process.exitCode = outcome.passed ? 0 : outcome.exit_code || 1;
+} finally {
+  rmSync(parent, {recursive: true, force: true});
+}
