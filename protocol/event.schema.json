@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "warforge://schema/event/1",
+  "title": "Warforge Event",
+  "type": "object",
+  "required": [
+    "protocol",
+    "event_id",
+    "match_id",
+    "type",
+    "source",
+    "timestamp",
+    "visibility",
+    "payload"
+  ],
+  "properties": {
+    "protocol": {
+      "const": "warforge/1"
+    },
+    "event_id": {
+      "type": "string"
+    },
+    "match_id": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string"
+    },
+    "source": {
+      "type": "string"
+    },
+    "seat": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "visibility": {
+      "enum": [
+        "PUBLIC",
+        "SEAT_PRIVATE",
+        "JUDGE_ONLY",
+        "APP_PRIVATE",
+        "REPLAY_SAFE"
+      ]
+    },
+    "payload": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}
