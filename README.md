@@ -64,3 +64,6 @@ instead give an individual participant the bound channel returned by
 
 See [the operator skill](skills/warforge-coder/SKILL.md) and [the security
 boundary](docs/SECURITY.md).
+
+The [build receipt](docs/BUILD_RECEIPT.md) records the starting baseline, exact
+verification commands, implementation matrix, and remaining HOLD items.
