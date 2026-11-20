@@ -1,0 +1,24 @@
+{
+  "protocol":"warforge/1",
+  "match_id":"deathmatch-0042",
+  "mode":"competitive",
+  "surface":{"type":"repository","id":"lokivelli316/arena-task-coding"},
+  "operators":[
+    {"id":"warforge://operator/lokivelli","type":"human","roles":["operator","coder","judge"],"capabilities":["intervene","review"]},
+    {"id":"warforge://operator/coder-alpha","type":"model","roles":["coder"],"capabilities":["read_file","write_file","run_tests","git"]},
+    {"id":"warforge://operator/coder-bravo","type":"model","roles":["coder"],"capabilities":["read_file","write_file","run_tests","git"]},
+    {"id":"warforge://operator/test-harness","type":"tool","roles":["judge"],"capabilities":["run_tests","score"]}
+  ],
+  "seats":[
+    {"id":"alpha","operator":"warforge://operator/coder-alpha","role":"coder","permissions":{"repo_scope":["worktree:alpha"],"actions":["read","write","test","commit"]},"budget":{"turns":50}},
+    {"id":"bravo","operator":"warforge://operator/coder-bravo","role":"coder","permissions":{"repo_scope":["worktree:bravo"],"actions":["read","write","test","commit"]},"budget":{"turns":50}},
+    {"id":"operator","operator":"warforge://operator/lokivelli","role":"operator","permissions":{"actions":["observe","intervene","judge"]}},
+    {"id":"judge","operator":"warforge://operator/test-harness","role":"judge","permissions":{"actions":["test","score"]}}
+  ],
+  "bridges":[
+    {"id":"warforge://bridge/github","version":"0.1.0","capabilities":["repository","branch","commit"],"actions":["read","write","commit"],"events":["commit"],"state_classes":["PUBLIC","SEAT_PRIVATE","JUDGE_ONLY","REPLAY_SAFE"],"permissions":{"alpha":{"actions":["read","write","commit"]},"bravo":{"actions":["read","write","commit"]},"operator":{"actions":["read"]}}},
+    {"id":"warforge://bridge/test-harness","version":"0.1.0","capabilities":["test","score"],"actions":["test","score"],"events":["build","test","score"],"state_classes":["PUBLIC","JUDGE_ONLY","REPLAY_SAFE"],"permissions":{"judge":{"actions":["test","score"]},"operator":{"actions":["test"]}}}
+  ],
+  "judge":{"id":"warforge://operator/test-harness","type":"deterministic"},
+  "receipt_policy":{"required":true,"hash_chain":true,"types":["ACTION_RECEIPT","DENIAL_RECEIPT","BUILD_RECEIPT","TEST_RECEIPT","SCORE_RECEIPT","RESULT_RECEIPT"]}
+}
