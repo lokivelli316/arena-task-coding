@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "warforge://schema/event/1",
+  "title": "Warforge Event",
+  "type": "object",
+  "required": [
+    "protocol",
+    "event_id",
+    "match_id",
+    "type",
+    "source",
+    "timestamp",
+    "visibility",
+    "payload"
+  ],
+  "properties": {
+    "protocol": {
+      "const": "warforge/1"
+    },
+    "event_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "match_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "type": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source": {
+      "type": "string",
+      "minLength": 1
+    },
+    "seat": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "visibility": {
+      "enum": [
+        "PUBLIC",
+        "SEAT_PRIVATE",
+        "JUDGE_ONLY",
+        "APP_PRIVATE",
+        "REPLAY_SAFE"
+      ]
+    },
+    "payload": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "visibility": {
+            "const": "SEAT_PRIVATE"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "seat"
+        ],
+        "properties": {
+          "seat": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ]
+}

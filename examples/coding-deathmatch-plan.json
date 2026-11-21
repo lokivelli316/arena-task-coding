@@ -1,0 +1,14 @@
+[
+  {"seat":"alpha","operation":"context"},
+  {"seat":"bravo","operation":"context"},
+  {"seat":"bravo","operation":"write","input":{"path":"../alpha/answer.txt","content":"out of scope"},"expect":"file-scope"},
+  {"seat":"alpha","operation":"write","input":{"path":"answer.txt","content":"warforge\n"}},
+  {"seat":"bravo","operation":"write","input":{"path":"answer.txt","content":"wrong\n"}},
+  {"seat":"alpha","operation":"run","input":{"id":"readiness"}},
+  {"seat":"alpha","operation":"artifact","input":{"id":"answer"}},
+  {"seat":"alpha","operation":"submit"},
+  {"seat":"bravo","operation":"submit"},
+  {"seat":"judge","operation":"evaluate","input":{"seat":"alpha"}},
+  {"seat":"judge","operation":"evaluate","input":{"seat":"bravo"}},
+  {"seat":"judge","operation":"finalize"}
+]

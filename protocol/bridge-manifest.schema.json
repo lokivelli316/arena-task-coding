@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "warforge://schema/bridge-manifest/1",
+  "title": "Warforge Bridge Manifest",
+  "type": "object",
+  "required": [
+    "id",
+    "version",
+    "native_app",
+    "capabilities",
+    "actions",
+    "events",
+    "state_classes",
+    "permissions",
+    "transports",
+    "limits"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^warforge://bridge/[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "native_app": {
+      "type": "string",
+      "minLength": 1
+    },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "actions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "state_classes": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "PUBLIC",
+          "SEAT_PRIVATE",
+          "JUDGE_ONLY",
+          "APP_PRIVATE",
+          "REPLAY_SAFE"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "permissions": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "actions"
+        ],
+        "properties": {
+          "actions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "receipt_types": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "ACTION_RECEIPT",
+          "STATE_RECEIPT",
+          "ARTIFACT_RECEIPT",
+          "BUILD_RECEIPT",
+          "TEST_RECEIPT",
+          "MOVE_RECEIPT",
+          "SCORE_RECEIPT",
+          "PERMISSION_RECEIPT",
+          "DENIAL_RECEIPT",
+          "DISCONNECT_RECEIPT",
+          "REJOIN_RECEIPT",
+          "JUDGE_RECEIPT",
+          "RESULT_RECEIPT"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "transports": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "limits": {
+      "type": "object"
+    },
+    "inputs": {
+      "type": "object"
+    },
+    "outputs": {
+      "type": "object"
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    }
+  },
+  "additionalProperties": false
+}

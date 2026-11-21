@@ -3,22 +3,249 @@
   "$id": "warforge://schema/match-manifest/1",
   "title": "ASTRAMYTHOS DEATHMATCH Warforge Match Manifest",
   "type": "object",
-  "required": ["protocol","match_id","mode","surface","operators","seats","bridges","judge","receipt_policy"],
+  "required": [
+    "protocol",
+    "match_id",
+    "mode",
+    "surface",
+    "operators",
+    "seats",
+    "bridges",
+    "judge",
+    "receipt_policy"
+  ],
   "properties": {
-    "protocol": {"const":"warforge/1"},
-    "match_id": {"type":"string","minLength":1},
-    "mode": {"enum":["competitive","cooperative","adversarial","mixed"]},
-    "surface": {"type":"object","required":["type","id"],"properties":{"type":{"type":"string"},"id":{"type":"string"}},"additionalProperties":true},
-    "operators": {"type":"array","items":{"$ref":"#/$defs/operator"}},
-    "seats": {"type":"array","items":{"$ref":"#/$defs/seat"}},
-    "bridges": {"type":"array","items":{"$ref":"#/$defs/bridge"}},
-    "judge": {"type":"object","required":["id","type"],"properties":{"id":{"type":"string"},"type":{"enum":["deterministic","human","model","hybrid"]}},"additionalProperties":true},
-    "receipt_policy": {"type":"object","required":["required"],"properties":{"required":{"type":"boolean"},"hash_chain":{"type":"boolean"},"types":{"type":"array","items":{"type":"string"}}},"additionalProperties":true}
+    "protocol": {
+      "const": "warforge/1"
+    },
+    "match_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$"
+    },
+    "mode": {
+      "enum": [
+        "competitive",
+        "cooperative",
+        "adversarial",
+        "mixed"
+      ]
+    },
+    "surface": {
+      "type": "object",
+      "required": [
+        "type",
+        "id"
+      ],
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "operators": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/operator"
+      },
+      "minItems": 1
+    },
+    "seats": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/seat"
+      },
+      "minItems": 1
+    },
+    "bridges": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/bridge"
+      }
+    },
+    "judge": {
+      "type": "object",
+      "required": [
+        "id",
+        "type"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^warforge://operator/[A-Za-z0-9][A-Za-z0-9._-]*$"
+        },
+        "type": {
+          "enum": [
+            "deterministic",
+            "human",
+            "model",
+            "hybrid"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "receipt_policy": {
+      "type": "object",
+      "required": [
+        "required"
+      ],
+      "properties": {
+        "required": {
+          "type": "boolean"
+        },
+        "hash_chain": {
+          "type": "boolean"
+        },
+        "types": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "ACTION_RECEIPT",
+              "STATE_RECEIPT",
+              "ARTIFACT_RECEIPT",
+              "BUILD_RECEIPT",
+              "TEST_RECEIPT",
+              "MOVE_RECEIPT",
+              "SCORE_RECEIPT",
+              "PERMISSION_RECEIPT",
+              "DENIAL_RECEIPT",
+              "DISCONNECT_RECEIPT",
+              "REJOIN_RECEIPT",
+              "JUDGE_RECEIPT",
+              "RESULT_RECEIPT"
+            ]
+          },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "coding": {
+      "$ref": "warforge://schema/coding-policy/1"
+    }
   },
   "$defs": {
-    "operator": {"type":"object","required":["id","type","roles"],"properties":{"id":{"type":"string"},"type":{"enum":["human","model","agent","app","tool","service"]},"roles":{"type":"array","items":{"type":"string"}},"capabilities":{"type":"array","items":{"type":"string"}},"limits":{"type":"array","items":{"type":"string"}}},"additionalProperties":false},
-    "seat": {"type":"object","required":["id","operator","role","permissions"],"properties":{"id":{"type":"string"},"operator":{"type":"string"},"role":{"type":"string"},"permissions":{"type":"object"},"budget":{"type":"object"}},"additionalProperties":true},
-    "bridge": {"type":"object","required":["id","version","capabilities","actions","events","state_classes"],"properties":{"id":{"type":"string"},"version":{"type":"string"},"capabilities":{"type":"array","items":{"type":"string"}},"actions":{"type":"array","items":{"type":"string"}},"events":{"type":"array","items":{"type":"string"}},"state_classes":{"type":"array","items":{"enum":["PUBLIC","SEAT_PRIVATE","JUDGE_ONLY","APP_PRIVATE","REPLAY_SAFE"]}}},"additionalProperties":true}
+    "operator": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "roles"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^warforge://operator/[A-Za-z0-9][A-Za-z0-9._-]*$"
+        },
+        "type": {
+          "enum": [
+            "human",
+            "model",
+            "agent",
+            "app",
+            "tool",
+            "service"
+          ]
+        },
+        "roles": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true,
+          "minItems": 1
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "limits": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "seat": {
+      "type": "object",
+      "required": [
+        "id",
+        "operator",
+        "role",
+        "permissions"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$"
+        },
+        "operator": {
+          "type": "string",
+          "pattern": "^warforge://operator/[A-Za-z0-9][A-Za-z0-9._-]*$"
+        },
+        "role": {
+          "type": "string",
+          "minLength": 1
+        },
+        "permissions": {
+          "type": "object",
+          "required": [
+            "actions"
+          ],
+          "properties": {
+            "actions": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true
+            },
+            "forbidden_actions": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true
+            },
+            "repo_scope": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true
+            }
+          },
+          "additionalProperties": true
+        },
+        "budget": {
+          "type": "object"
+        },
+        "adapter": {
+          "enum": [
+            "local",
+            "human"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "bridge": {
+      "$ref": "warforge://schema/bridge-manifest/1"
+    }
   },
-  "additionalProperties":false
+  "additionalProperties": false
 }
