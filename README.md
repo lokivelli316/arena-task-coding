@@ -62,6 +62,10 @@ input, the host saves evidence and removes the worktrees. Host applications can
 instead give an individual participant the bound channel returned by
 `CodingDeathmatch.openSeat()`.
 
+Hosts can require signed, expiring action packets for all seats by supplying
+`authorityPublicKey` and using `CodingDeathmatch.openSignedSeat()`. The security
+boundary includes the issuer and seat-channel example.
+
 See [the operator skill](skills/warforge-coder/SKILL.md) and [the security
 boundary](docs/SECURITY.md).
 

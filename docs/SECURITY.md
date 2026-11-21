@@ -51,6 +51,41 @@ authenticate claims.
 Supported runtime limits are wall-clock command and match deadlines, seat
 turns and elapsed time, scoped paths, file size, and command-output size.
 This local reference relies on the host's administrative boundary. Remote
-authentication, signed expiring authority packets, streaming durability,
+authentication, streaming durability,
 resource quotas, concurrent worker isolation and secure external provider
 execution are tracked in the build receipt.
+
+### Signed Coding Deathmatch seats
+
+A host can require a designated Ed25519 issuer for every seat by passing its
+public KeyObject as `authorityPublicKey` to the CodingDeathmatch constructor.
+This selects signed-only mode for the whole match. The trusted local mode
+continues to use `openSeat` when the option is omitted.
+
+```js
+// The host has already authenticated the channel and loaded the issuer's public key.
+const match = new CodingDeathmatch(manifest, {repository, output, authorityPublicKey});
+const channel = match.openSignedSeat(seat, actor);
+
+// On the designated issuer, using signAuthorityPacket from src/authority.js:
+const packet = signAuthorityPacket(privateKey, channel.scope, "read",
+  {path: "answer.txt"}, Date.now() + 30_000);
+
+// On the seat-bound host channel, after transport:
+const response = channel.invoke(packet);
+```
+
+The wire envelope contains a UTF-8 JSON message and a base64url Ed25519
+signature over its exact bytes. The inner message follows
+`protocol/authority-packet.schema.json`. It binds the protocol, a fresh match
+instance, match ID, task hash, actor, seat, action, exact input, Unix expiry
+in milliseconds, and issuer-generated nonce. Each host verifies its own scope
+and consumes each valid nonce once before bridge dispatch. A denied operation
+also spends its nonce. Receipts record the verified nonce or a denial reason.
+The issuer keeps its private key and decides which operations to sign. Packets
+are bearer credentials within their bound channel until used or expired.
+
+Replay tracking lives in one match owner and lasts for that instance. New
+instances reject earlier packets, including when the manifest and key are
+reused. Remote identity, transport security, issuer key provisioning and
+rotation, and coordination across independent host processes remain open.

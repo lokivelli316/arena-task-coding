@@ -137,7 +137,7 @@ a separate registration step does not apply.
 
 ## HOLD and next handoff
 
-- **Remote identity and authority.** The current channel factory assumes an authenticated local host. Transport authentication, designated-authority signatures, expiry, nonce/replay protection, and persistent seat rejoin across host restart remain open. No privileged remote authority is active.
+- **Remote identity and authority.** Channel factories assume an authenticated host. CodingDeathmatch now supports a designated Ed25519 issuer, expiring one-use packets and signed-only seat dispatch (see SECURITY.md). Transport authentication and persistent seat rejoin across host restart remain open. No privileged remote authority is active.
 - **External coder providers.** The local and human channels are wired. Codex CLI presence was checked, while Codex API/session access and secure credential delivery to an isolated provider remained unverified. Codex, OpenCode, Claude Code, Gemini, and other external integrations require provider adapters and end-to-end tests.
 - **GitHub remote operations.** The GitHub bridge uses local Git and advertises its real operations. Hosted GitHub authentication, fetch/sync, PR publication, and GitHub-event verification remain open. The repository update for this task used the workspace's existing Git transport separately from the match.
 - **Runtime and resources.** This is a Linux/Bubblewrap reference for one allowlisted Node tool and bounded text edits. General command/tool backends, file deletion and managed binary edits, CPU/memory/PID/disk/network quotas, token accounting, hard cancellation of Git/filesystem operations, concurrent isolated workers, and managed secrets remain open. The trusted host controls the source and evidence directories.

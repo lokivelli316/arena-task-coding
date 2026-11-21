@@ -5,6 +5,7 @@ import { join, resolve } from "node:path";
 import { performance } from "node:perf_hooks";
 import { BRIDGES, CODER_ADDRESS, OPERATIONS } from "./coder-adapter.js";
 import { assert, sha256, validateManifest } from "./core.js";
+import { MatchAuthority } from "./authority.js";
 import { ActionError, WarforgeMatch } from "./match.js";
 import { checkSandbox, runSandboxed } from "./sandbox.js";
 import { createWorktree, git, readCommitFile, readWorktreeFile, removeWorktree, repositoryBase, writeWorktreeFile } from "./worktrees.js";
@@ -23,6 +24,7 @@ function input(payload, ...keys) {
 
 export class CodingDeathmatch {
   #match;
+  #authority;
   #manifest;
   #policy;
   #coders = new Map();
@@ -35,13 +37,16 @@ export class CodingDeathmatch {
   #result;
   #closed = false;
 
-  constructor(manifest, {repository, output}) {
+  constructor(manifest, {repository, output, authorityPublicKey}) {
     validateManifest(manifest);
     assert(manifest.coding, "coding policy required");
     this.#manifest = structuredClone(manifest);
     this.#policy = this.#manifest.coding;
     this.#seats = new Map(this.#manifest.seats.map(seat => [seat.id, seat]));
     this.#taskHash = sha256(this.#policy.task);
+    if (authorityPublicKey !== undefined) {
+      this.#authority = new MatchAuthority(authorityPublicKey, this.#manifest.match_id, this.#taskHash);
+    }
     this.#match = new WarforgeMatch(this.#manifest, {
       guard: context => this.#guard(context),
       handlers: this.#handlers()
@@ -114,19 +119,43 @@ export class CodingDeathmatch {
     };
   }
 
-  // This factory is for an authenticated or trusted local host. Only the returned
-  // channel belongs to the adapter. Requests on it cannot supply seat or actor.
-  openSeat(seat, actor) {
+  #checkSeat(seat, actor) {
     assert(!this.#closed, "match closed");
-    assert(this.#seats.get(seat)?.operator === actor && this.#seats.has(seat), "actor-seat mismatch");
+    assert(this.#seats.has(seat) && this.#seats.get(seat).operator === actor, "actor-seat mismatch");
+  }
+
+  #invoke(seat, actor, action, payload) {
+    if (this.#closed) return {ok: false, reason: "match-closed"};
+    return this.#match.request({
+      action, payload, seat, actor, bridge: Object.hasOwn(OPERATIONS, action) ? OPERATIONS[action] : null
+    });
+  }
+
+  openSeat(seat, actor) {
+    this.#checkSeat(seat, actor);
+    assert(!this.#authority, "signed seat required");
     return Object.freeze({
-      invoke: (action, payload) => {
-        if (this.#closed) return {ok: false, reason: "match-closed"};
-        return this.#match.request({
-          action, payload, seat, actor, bridge: Object.hasOwn(OPERATIONS, action) ? OPERATIONS[action] : null
-        });
-      },
+      invoke: (action, payload) => this.#invoke(seat, actor, action, payload),
       view: () => this.#match.view(seat, {actor})
+    });
+  }
+
+  openSignedSeat(seat, actor) {
+    this.#checkSeat(seat, actor);
+    assert(this.#authority, "no signing authority configured");
+    const scope = this.#authority.scope(seat, actor);
+    return Object.freeze({
+      scope,
+      invoke: packet => {
+        if (this.#closed) return {ok: false, reason: "match-closed"};
+        const decision = this.#authority.consume(packet, seat, actor);
+        if (!decision.ok) {
+          this.#record("DENIAL_RECEIPT", {seat, actor}, {decision: decision.reason});
+          return decision;
+        }
+        this.#record("PERMISSION_RECEIPT", {seat, actor}, {event: "authority-verified", nonce: decision.nonce});
+        return this.#invoke(seat, actor, decision.action, decision.input);
+      }
     });
   }
 

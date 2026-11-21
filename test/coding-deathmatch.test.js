@@ -1,5 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { generateKeyPairSync } from "node:crypto";
+import { signAuthorityPacket } from "../src/authority.js";
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -9,7 +11,7 @@ import { CodingDeathmatch } from "../src/coding-match.js";
 import { replayMatch, verifyArtifacts } from "../src/replay.js";
 import { sha256 } from "../src/core.js";
 
-function fixture(t, change = () => {}) {
+function fixture(t, change = () => {}, options = {}) {
   const root = mkdtempSync(join(tmpdir(), "warforge-test-"));
   const repo = join(root, "repo");
   let match;
@@ -27,7 +29,7 @@ function fixture(t, change = () => {}) {
   git("-c", "user.name=Fixture", "-c", "user.email=fixture@example.test", "commit", "-qm", "base");
   const config = structuredClone(manifest);
   change(config);
-  match = new CodingDeathmatch(config, {repository: repo, output: join(root, "evidence")});
+  match = new CodingDeathmatch(config, {...options, repository: repo, output: join(root, "evidence")});
   const session = seat => match.openSeat(seat, config.seats.find(item => item.id === seat).operator);
   return {match, session, config, repo, git, base: git("rev-parse", "HEAD")};
 }
@@ -228,4 +230,33 @@ test("standalone worktree and judge entry points exercise the same local boundar
     git("worktree", "remove", "--force", created.worktree);
     rmSync(join(created.worktree, ".."), {recursive: true, force: true});
   }
+});
+
+test("signed-only coding seats require a fresh packet and still enforce ordinary bridge and budget gates", t => {
+  const {privateKey, publicKey} = generateKeyPairSync("ed25519");
+  const {match, config} = fixture(t, m => { m.seats.find(s => s.id === "alpha").budget.turns = 2; },
+    {authorityPublicKey: publicKey});
+  const {id, operator} = config.seats.find(s => s.id === "alpha");
+  assert.throws(() => match.openSeat(id, operator), /signed seat required/);
+  assert.throws(() => match.openSignedSeat(id, "other"), /actor-seat/);
+  const alpha = match.openSignedSeat(id, operator);
+  const issue = (action, input) => signAuthorityPacket(privateKey, alpha.scope, action, input, Date.now() + 60000);
+  assert.equal(alpha.invoke({}).reason, "invalid-authority");
+  const write = issue("write", {path: "answer.txt", content: "signed-private-content"});
+  accept(alpha.invoke(JSON.parse(JSON.stringify(write))));
+  assert.equal(alpha.invoke(write).reason, "authority-replayed");
+  const read = accept(alpha.invoke(issue("read", {path: "answer.txt"})));
+  assert.equal(read.content, "signed-private-content");
+  const excess = issue("read", {path: "answer.txt"});
+  assert.equal(alpha.invoke(excess).reason, "turn-budget");
+  assert.equal(alpha.invoke(excess).reason, "authority-replayed");
+  assert.equal(alpha.invoke(issue("evaluate", {seat: id})).reason, "denied");
+  const {archive} = match.exportEvidence();
+  const {history} = replayMatch(archive, {tip: archive.tip});
+  assert.equal(history.filter(r => r.payload.event === "authority-verified").length, 4);
+  assert.ok(history.some(r => r.type === "DENIAL_RECEIPT" && r.payload.decision === "invalid-authority"));
+  assert.equal(JSON.stringify(history).includes("signed-private-content"), false);
+  assert.equal(JSON.stringify(history).includes(write.signature), false);
+  match.close();
+  assert.equal(alpha.invoke(issue("context")).reason, "match-closed");
 });

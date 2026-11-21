@@ -1,4 +1,5 @@
 import test from "node:test";
+import { setImmediate } from "node:timers/promises";
 import assert from "node:assert/strict";
 import manifest from "../examples/coding-deathmatch.json" with {type: "json"};
 import { BridgeRegistry } from "../src/bridge-registry.js";
@@ -85,4 +86,18 @@ test("receipt ledger imports and verifies evidence with an optional trusted tip"
   assert.equal(ReceiptLedger.verify([], {tip}), false);
   evidence[0].payload.result.pass = false;
   assert.equal(ReceiptLedger.verify(evidence), false);
+});
+
+test("scheduled same-host appends retain one chain, and reordered evidence fails verification", async () => {
+  const ledger = new ReceiptLedger();
+  await Promise.all(Array.from({length: 256}, async (_, index) => {
+    await setImmediate();
+    ledger.append({match_id: "m", type: "TEST_RECEIPT", actor: "judge", seat: "judge", payload: {index}});
+  }));
+  const receipts = ledger.all();
+  const tip = receipts.at(-1).receipt_hash;
+  assert.equal(new Set(receipts.map(r => r.payload.index)).size, 256);
+  assert.equal(ReceiptLedger.verify(receipts, {tip}), true);
+  [receipts[17], receipts[18]] = [receipts[18], receipts[17]];
+  assert.equal(ReceiptLedger.verify(receipts, {tip}), false);
 });
