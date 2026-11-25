@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "warforge://schema/authority-packet/1",
+  "title": "Signed Warforge action message",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["protocol", "instance", "match_id", "task_hash", "actor", "seat", "action", "input", "expires_at", "nonce"],
+  "properties": {
+    "protocol": {"const": "warforge/authority/1"},
+    "instance": {"type": "string", "format": "uuid"},
+    "match_id": {"type": "string", "minLength": 1},
+    "task_hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "actor": {"type": "string", "minLength": 1},
+    "seat": {"type": "string", "minLength": 1},
+    "action": {"type": "string", "minLength": 1},
+    "input": {"type": "object"},
+    "expires_at": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+    "nonce": {"type": "string", "format": "uuid"}
+  }
+}
